@@ -11,8 +11,7 @@ class QuestionView extends Component {
       questions: [],
       page: 1,
       totalQuestions: 0,
-      categories: {},
-      currentCategory: null,
+      categories: [],
     };
   }
 
@@ -29,7 +28,6 @@ class QuestionView extends Component {
           questions: result.questions,
           totalQuestions: result.total_questions,
           categories: result.categories,
-          currentCategory: result.current_category,
         });
         return;
       },
@@ -71,7 +69,6 @@ class QuestionView extends Component {
         this.setState({
           questions: result.questions,
           totalQuestions: result.total_questions,
-          currentCategory: result.current_category,
         });
         return;
       },
@@ -97,7 +94,6 @@ class QuestionView extends Component {
         this.setState({
           questions: result.questions,
           totalQuestions: result.total_questions,
-          currentCategory: result.current_category,
         });
         return;
       },
@@ -138,18 +134,18 @@ class QuestionView extends Component {
             Categories
           </h2>
           <ul>
-            {Object.keys(this.state.categories).map((id) => (
+            {this.state.categories.map(({ id, type }) => (
               <li
                 key={id}
                 onClick={() => {
                   this.getByCategory(id);
                 }}
               >
-                {this.state.categories[id]}
+                {type}
                 <img
                   className='category'
-                  alt={`${this.state.categories[id].toLowerCase()}`}
-                  src={`${this.state.categories[id].toLowerCase()}.svg`}
+                  alt={`${type.toLowerCase()}`}
+                  src={`${type.toLowerCase()}.svg`}
                 />
               </li>
             ))}
@@ -163,7 +159,7 @@ class QuestionView extends Component {
               key={q.id}
               question={q.question}
               answer={q.answer}
-              category={this.state.categories[q.category]}
+              category={this.state.categories.find(({ id }) => id === q.category).type}
               difficulty={q.difficulty}
               questionAction={this.questionAction(q.id)}
             />
