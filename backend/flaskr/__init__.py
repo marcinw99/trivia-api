@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask_cors import CORS
 
 from models import setup_db, Question, Category
@@ -51,6 +51,18 @@ def create_app(test_config=None):
             'categories': get_categories()['categories'],
         }
 
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    def delete_question(question_id):
+        question = Question.query.get(question_id)
+
+        if question is None:
+            abort(404)
+
+        question.delete()
+
+        return {
+            "success": True
+        }
 
     """
     @TODO:
@@ -108,5 +120,10 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+
+    @app.errorhandler(404)
+    def not_found_error_handler(error):
+        return ({"success": False, "error": 404,
+                 "message": "resource not found"}, 404)
 
     return app
