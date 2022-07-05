@@ -5,10 +5,19 @@ from random import randrange
 from flaskr import create_app
 from models import setup_db, db, Question, Category
 
+
+def populate_db_with_categories(amount: int):
+    for i in range(0, amount):
+        category = Category(type=f'type{i}')
+        category.insert()
+
+
 def populate_db_with_questions(amount: int):
     for i in range(0, amount):
-        question = Question(question=f'question{i}', answer=f'answer{i}', category=1, difficulty=randrange(5))
+        question = Question(question=f'question{i}', answer=f'answer{i}',
+                            category=1, difficulty=randrange(5))
         question.insert()
+
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -38,16 +47,15 @@ class TriviaTestCase(unittest.TestCase):
 
     # Get Categories
     def test_get_accessories_success(self):
-        category = Category(type='Science')
-        category.insert()
+        populate_db_with_categories(2)
 
         res = self.client().get('/categories')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(data['categories']), 1)
+        self.assertEqual(len(data['categories']), 2)
         self.assertEqual(data['categories'][0]['id'], 1)
-        self.assertEqual(data['categories'][0]['type'], 'Science')
+        self.assertEqual(data['categories'][0]['type'], 'type0')
 
     def test_get_accessories_failure_not_get_method(self):
         res = self.client().post('/categories')
@@ -56,6 +64,7 @@ class TriviaTestCase(unittest.TestCase):
 
     # Get questions
     def test_get_questions_success(self):
+        populate_db_with_categories(1)
         populate_db_with_questions(2)
 
         res = self.client().get('/questions')
@@ -74,6 +83,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['questions']), 0)
 
     def test_get_questions_success_paginated(self):
+        populate_db_with_categories(1)
         populate_db_with_questions(15)
 
         res = self.client().get('/questions?page=2')
@@ -86,6 +96,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['questions'][0]['question'], 'question10')
 
     def test_get_questions_success_empty_when_page_out_of_range(self):
+        populate_db_with_categories(1)
         populate_db_with_questions(15)
 
         res = self.client().get('/questions?page=3')
@@ -96,6 +107,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['questions']), 0)
 
     def test_get_questions_failure_page_negative(self):
+        populate_db_with_categories(1)
         populate_db_with_questions(5)
 
         res = self.client().get('/questions?page=-10')
@@ -104,15 +116,8 @@ class TriviaTestCase(unittest.TestCase):
 
     # Delete Question
     def test_delete_question_success(self):
-        category = Category(type='Science')
-        category.insert()
-        question = Question(
-            question='question 1',
-            answer='answer 1',
-            category=1,
-            difficulty=4,
-        )
-        question.insert()
+        populate_db_with_categories(1)
+        populate_db_with_questions(1)
 
         res = self.client().delete('/questions/1')
         data = json.loads(res.data)
@@ -125,10 +130,68 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
+    # Add Question
+    def test_add_question_success(self):
+        populate_db_with_categories(1)
+        res = self.client().post('/questions', json={
+            'question': 'question 1',
+            'answer': 'answer 1',
+            'category': 1,
+            'difficulty': 3
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+
+        questions = Question.query.all()
+
+        self.assertEqual(len(questions), 1)
+        self.assertEqual(questions[0].format()['question'], 'question 1')
+
+    def test_add_question_failure_any_parameter_missing(self):
+        populate_db_with_categories(1)
+        res_no_question = self.client().post('/questions', json={
+            'answer': 'answer 1',
+            'category': 1,
+            'difficulty': 3
+        })
+        res_no_answer = self.client().post('/questions', json={
+            'question': 'question 1',
+            'category': 1,
+            'difficulty': 3
+        })
+        res_no_category = self.client().post('/questions', json={
+            'question': 'question 1',
+            'answer': 'answer 1',
+            'difficulty': 3
+        })
+        res_no_difficulty = self.client().post('/questions', json={
+            'question': 'question 1',
+            'answer': 'answer 1',
+            'category': 1,
+        })
+
+        status_codes = [res.status_code for res in
+                        [res_no_question, res_no_answer, res_no_category,
+                         res_no_difficulty]]
+
+        self.assertEqual(all(code == 400 for code in status_codes), True)
+
+    def test_add_question_failure_non_existing_category(self):
+        res = self.client().post('/questions', json={
+            'question': 'question 1',
+            'answer': 'answer 1',
+            'category': 5,
+            'difficulty': 3
+        })
+
+        self.assertEqual(res.status_code, 400)
+
+        """
+        TODO
+        Write at least one test for each test for successful operation and for expected errors.
+        """
 
 
 # Make the tests conveniently executable

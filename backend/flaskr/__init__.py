@@ -67,24 +67,29 @@ def create_app(test_config=None):
             "success": True
         }
 
-    """
-    @TODO:
-    Create an endpoint to DELETE question using a question ID.
+    @app.route('/questions', methods=['POST'])
+    def add_question():
+        body = request.get_json()
+        new_question_content = body.get('question', None)
+        answer = body.get('answer', None)
+        category = body.get('category', None)
+        difficulty = body.get('difficulty', None)
 
-    TEST: When you click the trash icon next to a question, the question will be removed.
-    This removal will persist in the database and when you refresh the page.
-    """
+        if None in [new_question_content, answer, category, difficulty]:
+            abort(400)
 
-    """
-    @TODO:
-    Create an endpoint to POST a new question,
-    which will require the question and answer text,
-    category, and difficulty score.
+        category_query = Category.query.filter(
+            Category.id == category).one_or_none()
+        if category_query is None:
+            abort(400)
 
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last page
-    of the questions list in the "List" tab.
-    """
+        new_question = Question(question=new_question_content, answer=answer,
+                                category=category, difficulty=difficulty)
+        new_question.insert()
+
+        return {
+            "success": True
+        }
 
     """
     @TODO:
