@@ -1,11 +1,14 @@
 import json
 import unittest
-
-from flask_sqlalchemy import SQLAlchemy
+from random import randrange
 
 from flaskr import create_app
 from models import setup_db, db, Question, Category
 
+def populate_db_with_questions(amount: int):
+    for i in range(0, amount):
+        question = Question(question=f'question{i}', answer=f'answer{i}', category=1, difficulty=randrange(5))
+        question.insert()
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -33,6 +36,7 @@ class TriviaTestCase(unittest.TestCase):
             self.db.drop_all()
         pass
 
+    # Get Categories
     def test_get_accessories_success(self):
         category = Category(type='Science')
         category.insert()
@@ -50,6 +54,55 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 405)
 
+    # Get questions
+    def test_get_questions_success(self):
+        populate_db_with_questions(2)
+
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data['questions']), 2)
+        self.assertEqual(data['questions'][0]['id'], 1)
+        self.assertEqual(data['questions'][0]['question'], 'question0')
+
+    def test_get_questions_success_no_questions(self):
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data['questions']), 0)
+
+    def test_get_questions_success_paginated(self):
+        populate_db_with_questions(15)
+
+        res = self.client().get('/questions?page=2')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['total_questions'], 15)
+        self.assertEqual(len(data['questions']), 5)
+        self.assertEqual(data['questions'][0]['id'], 11)
+        self.assertEqual(data['questions'][0]['question'], 'question10')
+
+    def test_get_questions_success_empty_when_page_out_of_range(self):
+        populate_db_with_questions(15)
+
+        res = self.client().get('/questions?page=3')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['total_questions'], 15)
+        self.assertEqual(len(data['questions']), 0)
+
+    def test_get_questions_failure_page_negative(self):
+        populate_db_with_questions(5)
+
+        res = self.client().get('/questions?page=-10')
+
+        self.assertEqual(res.status_code, 400)
+
+    # Delete Question
     def test_delete_question_success(self):
         category = Category(type='Science')
         category.insert()

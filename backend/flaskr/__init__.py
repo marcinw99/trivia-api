@@ -9,6 +9,9 @@ QUESTIONS_PER_PAGE = 10
 def paginate_entities(entities):
     page = request.args.get('page', 1, type=int)
 
+    if page < 0:
+        abort(400)
+
     start = QUESTIONS_PER_PAGE * (page - 1)
     end = QUESTIONS_PER_PAGE * page
 
