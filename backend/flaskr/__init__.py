@@ -174,27 +174,29 @@ def create_app(test_config=None):
             "question": next_question.format(),
         }
 
-    """
-    @TODO:
-    Create a POST endpoint to get questions to play the quiz.
-    This endpoint should take category and previous question parameters
-    and return a random questions within the given category,
-    if provided, and that is not one of the previous questions.
-
-    TEST: In the "Play" tab, after a user selects "All" or a category,
-    one question at a time is displayed, the user is allowed to answer
-    and shown whether they were correct or not.
-    """
-
-    """
-    @TODO:
-    Create error handlers for all expected errors
-    including 404 and 422.
-    """
+    @app.errorhandler(400)
+    def bad_request_handler(error):
+        return ({"success": False, "error": 400,
+                 "message": "bad request"}, 400)
 
     @app.errorhandler(404)
     def not_found_error_handler(error):
         return ({"success": False, "error": 404,
                  "message": "resource not found"}, 404)
+
+    @app.errorhandler(405)
+    def method_not_allowed_error_handler(error):
+        return ({"success": False, "error": 405,
+                 "message": "method not allowed"}, 405)
+
+    @app.errorhandler(422)
+    def unprocessable_handler(error):
+        return ({"success": False, "error": 422,
+                 "message": "unprocessable"}, 422)
+
+    @app.errorhandler(500)
+    def internal_server_error_handler(error):
+        return ({"success": False, "error": 500,
+                 "message": "internal server error"}, 500)
 
     return app

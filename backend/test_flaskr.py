@@ -334,10 +334,35 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
-        """
-        TODO
-        Write at least one test for each test for successful operation and for expected errors.
-        """
+    # Bad Request Error Handler
+    def test_bad_request_error_handler(self):
+        res = self.client().get('/questions?page=-10')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['error'], 400)
+        self.assertEqual(data['message'], 'bad request')
+
+    # Not Found Error Handler
+    def test_not_found_error_handler(self):
+        res = self.client().delete('/questions/non-existing-id')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['error'], 404)
+        self.assertEqual(data['message'], 'resource not found')
+
+    # Method Not Allowed Error Handler
+    def test_method_not_allowed_error_handler(self):
+        res = self.client().post('/categories')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 405)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['error'], 405)
+        self.assertEqual(data['message'], 'method not allowed')
 
 
 # Make the tests conveniently executable
