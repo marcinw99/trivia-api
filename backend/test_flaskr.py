@@ -189,6 +189,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
+    # Get Questions In Category
     def test_get_questions_in_category_success(self):
         populate_db_with_categories(2)
         populate_db_with_questions(4)
@@ -208,6 +209,27 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
+    # Search questions
+    def test_search_questions_success(self):
+        populate_db_with_categories(1)
+        populate_db_with_questions(3)
+
+        res = self.client().post('/questions/search', json={
+            'searchTerm': '2',
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['questions'][0]['question'], 'question2')
+        self.assertEqual(data['total_questions'], 1)
+
+    def test_search_questions_failure_no_search_term_parameter(self):
+        populate_db_with_categories(1)
+        populate_db_with_questions(1)
+
+        res = self.client().post('/questions/search')
+
+        self.assertEqual(res.status_code, 400)
 
 
         """

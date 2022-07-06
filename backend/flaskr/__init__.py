@@ -54,6 +54,24 @@ def create_app(test_config=None):
             'categories': get_categories()['categories'],
         }
 
+    @app.route('/questions/search', methods=['POST'])
+    def search_questions():
+        body = request.get_json()
+        search_term = body.get('searchTerm', None)
+
+        if search_term is None:
+            abort(400)
+
+        questions = Question.query.filter(
+            Question.question.ilike(f'%{search_term}%')
+        ).all()
+
+        return {
+            "success": True,
+            "questions": paginate_entities(format_entities(questions)),
+            "total_questions": len(questions),
+        }
+
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         question = Question.query.get(question_id)
@@ -91,7 +109,6 @@ def create_app(test_config=None):
             "success": True
         }
 
-    # Get questions in category
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_in_category(category_id):
         questions_query = Question.query.filter(
@@ -107,17 +124,6 @@ def create_app(test_config=None):
             'total_questions': len(questions_query),
             "success": True,
         }
-
-    """
-    @TODO:
-    Create a POST endpoint to get questions based on a search term.
-    It should return any questions for whom the search term
-    is a substring of the question.
-
-    TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
-    """
 
     """
     @TODO:
