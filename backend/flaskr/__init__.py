@@ -1,6 +1,7 @@
+from random import randrange
+
 from flask import Flask, request, abort
 from flask_cors import CORS
-
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
@@ -125,14 +126,53 @@ def create_app(test_config=None):
             "success": True,
         }
 
-    """
-    @TODO:
-    Create a GET endpoint to get questions based on category.
+    @app.route('/play-quiz', methods=['POST'])
+    def play_quiz():
+        body = request.get_json()
+        previous_questions = body.get('previous_questions', None)
+        quiz_category = body.get('quiz_category', None)
 
-    TEST: In the "List" tab / main screen, clicking on one of the
-    categories in the left column will cause only questions of that
-    category to be shown.
-    """
+        if previous_questions is None or quiz_category is None:
+            abort(400)
+
+        # 0 means all questions
+        if quiz_category != 0:
+            category_query = Category.query.filter(
+                Category.id == quiz_category).one_or_none()
+            if category_query is None:
+                abort(400)
+
+        question_ids_in_selected_category_query = Question.query
+        if quiz_category != 0:
+            question_ids_in_selected_category_query = question_ids_in_selected_category_query.filter(
+                Question.category == quiz_category)
+
+        question_ids_in_selected_category_query_result = question_ids_in_selected_category_query.with_entities(
+            Question.id).all()
+
+        ids_of_not_yet_asked_questions = [
+            item for item in question_ids_in_selected_category_query_result if
+            item[0] not in previous_questions
+        ]
+
+        if len(ids_of_not_yet_asked_questions) == 0:
+            return {
+                "success": True,
+                "question": None,
+            }
+
+        next_question_id_index = randrange(0,
+                                           len(ids_of_not_yet_asked_questions))
+
+        next_question_id = ids_of_not_yet_asked_questions[
+            next_question_id_index]
+
+        next_question = Question.query.get(next_question_id)
+
+        return {
+            "success": True,
+            "question": next_question.format(),
+        }
 
     """
     @TODO:

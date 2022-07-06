@@ -231,6 +231,108 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
+    # Play Quiz
+    def test_play_quiz_success_first_question(self):
+        populate_db_with_categories(3)
+        populate_db_with_questions(amount=3, category=3)
+
+        res = self.client().post('/play-quiz', json={
+            'previous_questions': [],
+            'quiz_category': 3,
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(data['question']['id'], [1, 2, 3])
+
+    def test_play_quiz_success_second_question(self):
+        populate_db_with_categories(3)
+        populate_db_with_questions(amount=3, category=3)
+
+        res = self.client().post('/play-quiz', json={
+            'previous_questions': [1],
+            'quiz_category': 3,
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(data['question']['id'], [2, 3])
+
+    def test_play_quiz_success_last_question(self):
+        populate_db_with_categories(3)
+        populate_db_with_questions(amount=3, category=3)
+
+        res = self.client().post('/play-quiz', json={
+            'previous_questions': [1, 2],
+            'quiz_category': 3,
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['question']['id'], 3)
+
+    def test_play_quiz_success_no_questions_left(self):
+        populate_db_with_categories(3)
+        populate_db_with_questions(amount=3, category=3)
+
+        res = self.client().post('/play-quiz', json={
+            'previous_questions': [1, 2, 3],
+            'quiz_category': 3,
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['question'], None)
+
+    def test_play_quiz_success_iterates_through_all_questions(self):
+        populate_db_with_categories(2)
+        populate_db_with_questions(amount=1, category=1)
+        populate_db_with_questions(amount=1, category=2)
+
+        first_call_res = self.client().post('/play-quiz', json={
+            'previous_questions': [],
+            'quiz_category': 0,
+        })
+        self.assertEqual(first_call_res.status_code, 200)
+
+        first_call_data = json.loads(first_call_res.data)
+
+        first_call_question_id = first_call_data['question']['id']
+
+        second_call_res = self.client().post('/play-quiz', json={
+            'previous_questions': [first_call_question_id],
+            'quiz_category': 0,
+        })
+        self.assertEqual(second_call_res.status_code, 200)
+
+        second_call_data = json.loads(second_call_res.data)
+
+        second_call_question_id = second_call_data['question']['id']
+
+        calls_question_ids = [first_call_question_id, second_call_question_id]
+        calls_question_ids.sort()
+        self.assertEqual(calls_question_ids, [1, 2])
+
+    def test_play_quiz_failure_any_missing_parameters(self):
+        res_no_quiz_category = self.client().post('/play-quiz', json={
+            'quiz_category': 3,
+        })
+
+        self.assertEqual(res_no_quiz_category.status_code, 400)
+
+        res_no_question = self.client().post('/play-quiz', json={
+            'previous_questions': [1],
+        })
+
+        self.assertEqual(res_no_question.status_code, 400)
+
+    def test_play_quiz_failure_no_such_category(self):
+        res = self.client().post('/play-quiz', json={
+            'previous_questions': [1],
+            'quiz_category': 3,
+        })
+
+        self.assertEqual(res.status_code, 400)
 
         """
         TODO
