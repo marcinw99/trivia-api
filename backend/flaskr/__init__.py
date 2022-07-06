@@ -42,6 +42,7 @@ def create_app(test_config=None):
         categories = Category.query.all()
 
         return {
+            'success': True,
             'categories': format_entities(categories),
         }
 
@@ -50,6 +51,7 @@ def create_app(test_config=None):
         questions = Question.query.all()
 
         return {
+            'success': True,
             'questions': format_entities(paginate_entities(questions)),
             'total_questions': len(questions),
             'categories': get_categories()['categories'],
