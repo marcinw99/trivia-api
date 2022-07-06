@@ -94,7 +94,9 @@ You will need to provide detailed documentation of your API endpoints including 
 
 Write at least one test for the success and at least one error behavior of each endpoint using the unittest library.
 
-To deploy the tests, run
+To deploy the tests, run the code below
+
+Note: you need to setup trivia_test db only once, tests are cleaning the db themselves.
 
 ```bash
 dropdb trivia_test
