@@ -91,6 +91,23 @@ def create_app(test_config=None):
             "success": True
         }
 
+    # Get questions in category
+    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+    def get_questions_in_category(category_id):
+        questions_query = Question.query.filter(
+            Question.category == category_id).all()
+
+        category_query = Category.query.filter(
+            Category.id == category_id).one_or_none()
+        if category_query is None:
+            abort(400)
+
+        return {
+            'questions': paginate_entities(format_entities(questions_query)),
+            'total_questions': len(questions_query),
+            "success": True,
+        }
+
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.

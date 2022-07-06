@@ -12,10 +12,11 @@ def populate_db_with_categories(amount: int):
         category.insert()
 
 
-def populate_db_with_questions(amount: int):
+def populate_db_with_questions(amount: int, category=1):
     for i in range(0, amount):
         question = Question(question=f'question{i}', answer=f'answer{i}',
-                            category=1, difficulty=randrange(5))
+                            category=category,
+                            difficulty=randrange(5))
         question.insert()
 
 
@@ -187,6 +188,27 @@ class TriviaTestCase(unittest.TestCase):
         })
 
         self.assertEqual(res.status_code, 400)
+
+    def test_get_questions_in_category_success(self):
+        populate_db_with_categories(2)
+        populate_db_with_questions(4)
+        populate_db_with_questions(amount=2, category=2)
+
+        res = self.client().get('/categories/1/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data['questions']), 4)
+        self.assertEqual(data['total_questions'], 4)
+
+    def test_get_questions_in_category_failure_category_does_not_exist(self):
+        populate_db_with_categories(1)
+        populate_db_with_questions(1)
+        res = self.client().get('/categories/5/questions')
+
+        self.assertEqual(res.status_code, 400)
+
+
 
         """
         TODO
