@@ -147,11 +147,13 @@ def create_app(test_config=None):
 
         question_ids_in_selected_category_query = Question.query
         if quiz_category != 0:
-            question_ids_in_selected_category_query = question_ids_in_selected_category_query.filter(
-                Question.category == quiz_category)
+            question_ids_in_selected_category_query = \
+                question_ids_in_selected_category_query.filter(
+                    Question.category == quiz_category)
 
-        question_ids_in_selected_category_query_result = question_ids_in_selected_category_query.with_entities(
-            Question.id).all()
+        question_ids_in_selected_category_query_result = \
+            question_ids_in_selected_category_query.with_entities(
+                Question.id).all()
 
         ids_of_not_yet_asked_questions = [
             item for item in question_ids_in_selected_category_query_result if
