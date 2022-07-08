@@ -85,7 +85,8 @@ def create_app(test_config=None):
         question.delete()
 
         return {
-            "success": True
+            "success": True,
+            "question_id": question_id,
         }
 
     @app.route('/questions', methods=['POST'])
